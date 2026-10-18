@@ -1,0 +1,31 @@
+[package]
+name = "reh"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.87"
+description = "REH — Reverse Engineer Higgsfield: upload an AI video, get the fal.ai flow that rebuilds the format, then scale it."
+license = "MIT"
+repository = "https://github.com/dansugc/reverse-engineer-higgsfield"
+readme = "README.md"
+keywords = ["ai-video", "fal", "reverse-engineering", "mcp", "higgsfield"]
+categories = ["command-line-utilities", "multimedia::video"]
+
+[[bin]]
+name = "reh"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.8", features = ["multipart"] }
+base64 = "0.22"
+clap = { version = "4.5", features = ["derive"] }
+dotenvy = "0.15"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+
+[profile.release]
+opt-level = 3
+strip = true

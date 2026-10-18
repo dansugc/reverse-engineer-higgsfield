@@ -1,0 +1,6 @@
+/target
+.env
+.env.*
+reh-runs/
+*.mp4
+!examples/**/*.mp4

@@ -1,0 +1,125 @@
+{
+  "version": "1",
+  "name": "skeleton",
+  "title": "Probe-only skeleton",
+  "format_summary": "2 shot(s), 13.0s, 9:16 \u2014 fill the variables from the keyframes or re-run with FAL_KEY",
+  "format": {
+    "aspect": "9:16",
+    "width": 720,
+    "height": 1280,
+    "duration_s": 13.025,
+    "fps": 30.0
+  },
+  "variables": {
+    "setting": {
+      "value": "a bright room",
+      "description": "where it happens"
+    },
+    "shot1_motion": {
+      "value": "subtle natural motion, static camera",
+      "description": "subject + camera motion in shot 1"
+    },
+    "shot2_motion": {
+      "value": "subtle natural motion, static camera",
+      "description": "subject + camera motion in shot 2"
+    },
+    "style": {
+      "value": "vertical iPhone UGC footage, natural light",
+      "description": "look and feel"
+    },
+    "subject": {
+      "value": "a person",
+      "description": "who/what is on screen"
+    }
+  },
+  "steps": [
+    {
+      "id": "character",
+      "kind": "text_to_image",
+      "model": "fal-ai/nano-banana-pro",
+      "prompt": "{{subject}} in {{setting}}, {{style}}",
+      "image_from": null,
+      "duration_s": null,
+      "params": {},
+      "why": "first frame for every shot (placeholder \u2014 describe the subject from the keyframes)"
+    },
+    {
+      "id": "shot1",
+      "kind": "image_to_video",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "prompt": "{{shot1_motion}}",
+      "image_from": "character",
+      "duration_s": 7.067,
+      "params": {},
+      "why": "shot 1 (0.00\u20137.07s)"
+    },
+    {
+      "id": "shot2",
+      "kind": "image_to_video",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "prompt": "{{shot2_motion}}",
+      "image_from": "character",
+      "duration_s": 5.958,
+      "params": {},
+      "why": "shot 2 (7.07\u201313.03s)"
+    }
+  ],
+  "edit": {
+    "sequence": [
+      {
+        "step": "shot1",
+        "duration_s": 7.067
+      },
+      {
+        "step": "shot2",
+        "duration_s": 5.958
+      }
+    ],
+    "captions": [],
+    "audio": {
+      "mode": "music",
+      "note": "",
+      "music_path": null
+    }
+  },
+  "evidence": [
+    {
+      "claim": "13.03s, 720x1280 (9:16), 30 fps",
+      "kind": "observed",
+      "source": "ffprobe"
+    },
+    {
+      "claim": "2 shot(s): 0.00\u20137.07s, 7.07\u201313.03s",
+      "kind": "observed",
+      "source": "ffmpeg scene detection (threshold 0.3)"
+    },
+    {
+      "claim": "audio track: yes (mean -19.3 dB)",
+      "kind": "observed",
+      "source": "ffprobe / volumedetect"
+    },
+    {
+      "claim": "TikTok re-encode (aigc_info / vid tags): original generator metadata was stripped",
+      "kind": "observed",
+      "source": "container tags / byte scan"
+    },
+    {
+      "claim": "encoder: Lavf58.76.100",
+      "kind": "observed",
+      "source": "container tags / byte scan"
+    },
+    {
+      "claim": "no C2PA / generator manifest found",
+      "kind": "observed",
+      "source": "container tags / byte scan"
+    }
+  ],
+  "unknowns": [
+    "Everything visual: no video model ran (set FAL_KEY)"
+  ],
+  "source": {
+    "file": "example.mp4",
+    "read_with": "probe only",
+    "note": "interim example"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "reh-harness",
+  "version": "1",
+  "files": ["analyst.md", "formats.md", "models.md", "verify.md"]
+}
