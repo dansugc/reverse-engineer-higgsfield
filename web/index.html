@@ -17,7 +17,7 @@ button,input,textarea { font:inherit; color:inherit; }
 main { max-width:1180px; margin:0 auto; padding:28px 20px 80px; }
 h1 { font-size:clamp(28px,5vw,44px); letter-spacing:-1.2px; line-height:1.05; margin:28px 0 10px; }
 .lede { color:var(--muted); max-width:640px; margin:0 0 24px; }
-.drop { border:2px dashed var(--border); border-radius:18px; background:var(--surface); padding:46px 20px; text-align:center; cursor:pointer; transition:border-color .2s var(--ease), background .2s var(--ease); }
+.drop { display:block; border:2px dashed var(--border); border-radius:18px; background:var(--surface); padding:46px 20px; text-align:center; cursor:pointer; transition:border-color .2s var(--ease), background .2s var(--ease); }
 .drop:hover, .drop.over { border-color:var(--accent); background:var(--soft); }
 .drop strong { display:block; font-size:18px; margin-bottom:4px; } .drop span { color:var(--muted); font-size:13.5px; }
 .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; color:var(--muted); font-size:13px; }
@@ -55,18 +55,47 @@ textarea { width:100%; min-height:64px; resize:vertical; border:1px solid var(--
 @media (prefers-reduced-motion:reduce) { .spin { animation:none; } }
 .compare { display:grid; grid-template-columns:1fr 1fr; gap:14px; } @media (max-width:700px){ .compare { grid-template-columns:1fr; } }
 .links a { color:var(--accent); text-decoration:none; margin-right:12px; font-size:13px; }
+.steps3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:0 0 18px; } @media (max-width:760px){ .steps3 { grid-template-columns:1fr; } }
+.s3 { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:12px; background:var(--surface); border:1px solid var(--border); font-size:13.5px; }
+.s3 .n { flex:none; width:22px; height:22px; border-radius:50%; background:var(--s2); color:var(--muted); display:grid; place-items:center; font-size:12px; font-weight:700; }
+.s3.done .n { background:var(--ok); color:#fff; } .s3 b { display:block; } .s3 span { color:var(--muted); font-size:12.5px; }
+.keycard { margin-bottom:16px; } .keyrow { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.keyrow input[type=password] { flex:1; min-width:240px; height:40px; border:1px solid var(--border); border-radius:10px; background:var(--bg); padding:0 12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; }
+.ok { color:var(--ok); font-size:13.5px; } .help { color:var(--muted); font-size:12.5px; margin:8px 0 0; } .help a, .muted a { color:var(--accent); }
+button.pill { cursor:pointer; background:transparent; }
+.pubbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:14px 16px; border-radius:var(--r); background:var(--s2); border:1px solid var(--border); margin-top:12px; }
+.pubbar input { flex:1; min-width:200px; height:36px; border:1px solid var(--border); border-radius:9px; padding:0 10px; background:var(--surface); }
+.pubout { margin-top:12px; } .pubout .open { display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 16px; border-radius:10px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
+.pp { border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:8px; font-size:13px; background:var(--bg); }
+.pp header { display:flex; gap:8px; align-items:center; margin-bottom:4px; } .pp header button { margin-left:auto; height:26px; padding:0 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:12px; }
+.pp p { margin:0; white-space:pre-wrap; }
 [hidden] { display:none !important; }
 </style>
 </head>
 <body>
 <header class="top"><span class="mark">REH</span><b>REH</b><small>Reverse Engineer Higgsfield → fal.ai</small><span class="sp"></span>
-  <span class="pill"><span class="dot" id="dKey"></span>fal key</span><span class="pill"><span class="dot" id="dFf"></span>ffmpeg</span></header>
+  <button class="pill" id="keyPill" title="fal key"><span class="dot" id="dKey"></span><span id="keyPillText">fal key</span></button><span class="pill"><span class="dot" id="dFf"></span>ffmpeg</span></header>
 <main>
   <section id="home">
     <h1>Upload an AI video. Get the fal flow that makes it.</h1>
-    <p class="lede">REH measures the cuts, timing and frames, reads the shots with a video model, and writes a reusable fal.ai recipe: the images, the image-to-video steps, the edit. Then rebuild it on fal, or swap the variables and scale the format.</p>
-    <label class="drop" id="drop"><input type="file" id="file" accept="video/*" hidden><strong>Drop a video here</strong><span>Higgsfield, Kling, Seedance, Veo… mp4 / mov / webm</span></label>
-    <div class="row"><label><input type="checkbox" id="noai"> probe only (no fal key, free)</label><span id="busy" hidden><span class="spin"></span> analyzing… this takes ~30–90s with AI</span></div>
+    <p class="lede">REH measures the cuts, timing and frames, reads the shots with a video model, and writes the fal.ai recipe: the images, the image-to-video steps, the prompts. One click turns it into a fal Workflow you can run and edit.</p>
+    <div class="steps3">
+      <div class="s3" id="s1"><span class="n">1</span><div><b>Add your fal key</b><span>stays on this computer</span></div></div>
+      <div class="s3" id="s2"><span class="n">2</span><div><b>Drop a video</b><span>Higgsfield, Kling, Seedance, Veo…</span></div></div>
+      <div class="s3"><span class="n">3</span><div><b>Create the fal Workflow</b><span>prompts included, edit before you run</span></div></div>
+    </div>
+    <div class="card keycard" id="keycard">
+      <p class="label">1 · Your fal key</p>
+      <div id="keyForm">
+        <div class="keyrow"><input type="password" id="keyIn" placeholder="paste your fal key (xxxxxxxx-…:…)" autocomplete="off" spellcheck="false"><button class="btn" id="keySave">Save key</button></div>
+        <div class="row" style="margin-top:8px"><label><input type="checkbox" id="keyRemember" checked> remember on this computer (saved to <code>.env</code>, never uploaded)</label></div>
+        <p class="help">No key yet? <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener">fal.ai → Dashboard → API Keys</a> → <b>Add key</b> → copy the whole key. Analyzing a video costs a few cents; creating a Workflow is free; running it costs what fal charges for the models.</p>
+      </div>
+      <div id="keyOk" hidden><span class="ok">✓ fal key connected</span> <button class="btn ghost" id="keyChange" style="height:30px;margin-left:8px">Change</button></div>
+      <div class="err" id="kerr"></div>
+    </div>
+    <label class="drop" id="drop"><input type="file" id="file" accept="video/*" hidden><strong>2 · Drop a video here</strong><span>or click to choose · mp4 / mov / webm</span></label>
+    <div class="row"><label><input type="checkbox" id="noai"> probe only (no fal key, free: cuts and frames, no prompts)</label><span id="busy" hidden><span class="spin"></span> analyzing… ~30–90s while a video model reads every shot</span></div>
     <div class="err" id="err"></div>
   </section>
 
@@ -75,7 +104,7 @@ textarea { width:100%; min-height:64px; resize:vertical; border:1px solid var(--
       <div class="card">
         <p class="label">Original</p>
         <video id="orig" controls playsinline></video>
-        <div class="links" style="margin-top:12px"><a id="dlFlow" download>flow.json</a><a id="dlWf" download>fal workflow.json</a><a id="dlRep" download>REPORT.md</a></div>
+        <div class="links" style="margin-top:12px"><a id="dlFlow" download>flow.json</a><a id="dlWf" download>fal workflow.json</a><a id="dlRep" download>REPORT.md</a><a href="/">↺ another video</a></div>
       </div>
       <div class="card">
         <p class="summary" id="summary"></p>
@@ -94,13 +123,22 @@ textarea { width:100%; min-height:64px; resize:vertical; border:1px solid var(--
       <p class="label">The fal flow (editable)</p>
       <div class="steps" id="steps"></div>
       <div class="buildbar">
-        <span>Rebuild on fal · est. <span class="cost" id="cost">–</span> <span class="muted" id="costSrc"></span></span>
+        <span>Or rebuild it here (with captions + cuts) · est. <span class="cost" id="cost">–</span> <span class="muted" id="costSrc"></span></span>
         <span class="sp" style="flex:1"></span>
         <label class="muted">max $ <input type="number" id="max" value="5" min="0.5" step="0.5"></label>
         <button class="btn accent" id="build">Rebuild on fal</button>
       </div>
       <div class="err" id="berr"></div>
       <div id="bbusy" class="muted" hidden style="margin-top:10px"><span class="spin"></span> generating on fal… images first, then the video shots in parallel (2–6 min)</div>
+    </div>
+
+    <div class="card" style="margin-top:20px" id="pubcard">
+      <p class="label">3 · Create the fal Workflow</p>
+      <p class="muted" style="margin:0">Uses the prompts and variables above, exactly as you edited them. Creating it is free; open it in fal and press Run (≈ <span id="pubcost">–</span> per run).</p>
+      <div class="pubbar"><input id="pubName" placeholder="workflow name" spellcheck="false"><button class="btn accent" id="pub">Create fal Workflow</button></div>
+      <div class="err" id="perr"></div>
+      <div id="pbusy" class="muted" hidden style="margin-top:10px"><span class="spin"></span> creating on fal…</div>
+      <div class="pubout" id="pubout" hidden></div>
     </div>
 
     <div class="card" id="out" hidden style="margin-top:20px">
@@ -119,7 +157,27 @@ textarea { width:100%; min-height:64px; resize:vertical; border:1px solid var(--
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 let state = null;
-fetch("/api/status").then(r => r.json()).then(s => { $("#dKey").classList.toggle("on", s.fal_key); $("#dFf").classList.toggle("on", s.ffmpeg); if (!s.fal_key) $("#noai").checked = true; });
+let hasKey = false;
+function setKey(on) {
+  hasKey = on;
+  $("#dKey").classList.toggle("on", on); $("#keyPillText").textContent = on ? "fal key" : "add fal key";
+  $("#keyForm").hidden = on; $("#keyOk").hidden = !on; $("#s1").classList.toggle("done", on);
+  $("#noai").checked = !on;
+  if (state) { $("#build").disabled = !on; $("#pub").disabled = !on; }
+}
+fetch("/api/status").then(r => r.json()).then(s => { setKey(s.fal_key); $("#dFf").classList.toggle("on", s.ffmpeg); });
+$("#keySave").addEventListener("click", async () => {
+  $("#kerr").textContent = ""; $("#keySave").disabled = true;
+  try {
+    const r = await fetch("/api/key", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ key: $("#keyIn").value, remember: $("#keyRemember").checked }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || r.status);
+    $("#keyIn").value = ""; setKey(true);
+  } catch (e) { $("#kerr").textContent = e.message; }
+  finally { $("#keySave").disabled = false; }
+});
+$("#keyIn").addEventListener("keydown", e => e.key === "Enter" && $("#keySave").click());
+$("#keyChange").addEventListener("click", () => { $("#keyForm").hidden = false; $("#keyOk").hidden = true; $("#keyIn").focus(); });
+$("#keyPill").addEventListener("click", () => { if (!$("#home").hidden) { $("#keycard").scrollIntoView({ behavior: "smooth" }); if (!hasKey) $("#keyIn").focus(); } else location.href = "/"; });
 
 const drop = $("#drop");
 ["dragover","dragenter"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
@@ -134,7 +192,7 @@ async function upload(file) {
     const r = await fetch("/api/analyze", { method: "POST", body: fd });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || r.status);
-    state = d; render();
+    state = d; $("#s2").classList.add("done"); render();
   } catch (e) { $("#err").textContent = e.message; }
   finally { $("#busy").hidden = true; }
 }
@@ -155,7 +213,9 @@ function render() {
   $("#evidence").innerHTML = f.evidence.map(e => `<li><em class="${esc(e.kind)}">${esc(e.kind)}</em>${esc(e.claim)}</li>`).join("");
   $("#unknowns").innerHTML = f.unknowns.map(u => `<li>${esc(u)}</li>`).join("");
   $("#dlFlow").href = `/files/${d.run}/flow.json`; $("#dlWf").href = d.workflow; $("#dlRep").href = `/files/${d.run}/REPORT.md`;
-  $("#build").disabled = !d.ai && !document.querySelector("#dKey").classList.contains("on");
+  $("#build").disabled = !hasKey; $("#pub").disabled = !hasKey;
+  $("#pubName").value = f.name; $("#pubcost").textContent = "$" + d.estimate.total_usd.toFixed(2);
+  if (!hasKey) $("#perr").textContent = "Add your fal key (top right) to create the Workflow. You can still download “fal workflow.json” and import it in fal.";
 }
 
 function currentFlow() {
@@ -164,6 +224,21 @@ function currentFlow() {
   document.querySelectorAll("[data-var]").forEach(i => f.variables[i.dataset.var].value = i.value);
   return f;
 }
+
+$("#pub").addEventListener("click", async () => {
+  $("#perr").textContent = ""; $("#pbusy").hidden = false; $("#pub").disabled = true; $("#pubout").hidden = true;
+  try {
+    const r = await fetch("/api/publish", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ run: state.run, flow: currentFlow(), name: $("#pubName").value }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || r.status);
+    $("#pubout").innerHTML = `<p class="ok" style="margin:0 0 10px">✓ Created <b>${esc(d.name)}</b> in your fal account</p>`
+      + (d.url ? `<a class="open" href="${esc(d.url)}" target="_blank" rel="noopener">Open in fal ↗</a> <span class="muted" style="margin-left:8px">then press Run (▶) in the editor</span>` : `<p class="muted">Find it in fal → Workflows.</p>`)
+      + `<p class="label" style="margin-top:16px">Prompts in this Workflow</p>`
+      + d.prompts.map((p, i) => `<div class="pp"><header><span class="tag k">${esc(p.step)}</span><span class="tag">${esc(p.model)}</span><button data-copy="${i}">Copy</button></header><p>${esc(p.prompt)}</p></div>`).join("");
+    $("#pubout").querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => { navigator.clipboard?.writeText(d.prompts[+b.dataset.copy].prompt); b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1200); }));
+    $("#pubout").hidden = false;
+  } catch (e) { $("#perr").textContent = e.message; }
+  finally { $("#pbusy").hidden = true; $("#pub").disabled = !hasKey; }
+});
 
 $("#build").addEventListener("click", async () => {
   $("#berr").textContent = ""; $("#bbusy").hidden = false; $("#build").disabled = true;
@@ -180,7 +255,7 @@ $("#build").addEventListener("click", async () => {
     $("#warn").innerHTML = (d.warnings || []).map(w => `<li>${esc(w)}</li>`).join("");
     $("#out").scrollIntoView({ behavior: "smooth" });
   } catch (e) { $("#berr").textContent = e.message; }
-  finally { $("#bbusy").hidden = true; $("#build").disabled = false; }
+  finally { $("#bbusy").hidden = true; $("#build").disabled = !hasKey; }
 });
 </script>
 </body>

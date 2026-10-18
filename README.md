@@ -8,6 +8,8 @@
 
 `reh analyze video.mp4` → `reh build flow.json` → `reh verify` → `reh batch`
 
+**New here? Follow the [step-by-step guide](docs/GUIDE.md)**: fal key → drop a video → fal Workflow with every prompt filled in.
+
 Built by [**DansUGC**](https://dansugc.com/?utm_source=github&utm_medium=oss&utm_campaign=reverse-engineer-higgsfield): real human UGC creators for your ads, from $5 a clip.
 
 </div>
@@ -73,7 +75,13 @@ No key? `reh analyze video.mp4 --no-ai` still measures shots, cut timing, keyfra
 reh web          # http://localhost:4400
 ```
 
-Drop a video in. You see the measured shots with keyframes, the reading for each shot, the editable flow and variables, and a live cost estimate. Then press **Rebuild on fal** and compare the original and the rebuild side by side. The server listens on localhost only.
+1. **Paste your fal key** in the app. It's checked with fal, optionally saved to a local `.env` with owner-only permissions, and never sent back to the page.
+2. **Drop a video.** You see the measured shots with keyframes, what the video model read in each shot, the editable variables and prompts, and a live cost estimate.
+3. **Create fal Workflow.** One click creates it in your fal account with your edited prompts in every node, then gives you an **Open in fal** link and each prompt with a Copy button. Or press **Rebuild on fal** to render it here with captions and the original cut timing, side by side with the original.
+
+<p align="center"><img src="docs/images/web-workflow.jpg" alt="REH web app after creating a fal Workflow" width="720"></p>
+
+The server listens on localhost only. Full walkthrough: [docs/GUIDE.md](docs/GUIDE.md).
 
 ### Scale a format
 

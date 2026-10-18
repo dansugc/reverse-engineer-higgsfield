@@ -113,8 +113,8 @@ async fn call(name: &str, a: &Value) -> Result<String> {
             if a["dry_run"].as_bool().unwrap_or(false) {
                 return Ok(format!("wrote {}", out.display()));
             }
-            match fal::Fal::from_env()?.create_workflow(&wf).await {
-                Ok(v) => Ok(format!("created fal Workflow `{name}`; wrote {}\n{}", out.display(), v)),
+            match fal::Fal::from_env()?.create_workflow_unique(&name, |n| f.to_fal_workflow(n)).await {
+                Ok((n, url)) => Ok(format!("created fal Workflow `{n}` {}; wrote {}", url.unwrap_or_default(), out.display())),
                 Err(e) => Ok(format!("wrote {} (import it in the fal Workflow editor). Create failed: {e:#}", out.display())),
             }
         }

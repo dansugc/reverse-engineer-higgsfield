@@ -288,8 +288,8 @@ async fn run(cli: Cli) -> Result<()> {
             println!("✓ wrote {}", out.display());
             if !dry_run {
                 let fal = fal::Fal::from_env()?;
-                match fal.create_workflow(&wf).await {
-                    Ok(v) => println!("✓ created fal Workflow `{}` {}", name, v["workflow"]["user_nickname"].as_str().map(|u| format!("→ https://fal.ai/workflows/{u}/{name}")).unwrap_or_default()),
+                match fal.create_workflow_unique(&name, |n| f.to_fal_workflow(n)).await {
+                    Ok((n, url)) => println!("✓ created fal Workflow `{n}` {}", url.map(|u| format!("→ {u}")).unwrap_or_default()),
                     Err(e) => eprintln!("! {e:#}\n  The JSON above is ready to import in the fal Workflow editor."),
                 }
             }

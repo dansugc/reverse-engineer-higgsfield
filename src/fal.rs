@@ -16,6 +16,12 @@ pub struct Fal {
     http: reqwest::Client,
 }
 
+/// fal keys look like `<uuid>:<hex>`; reject obvious junk before any request.
+pub fn plausible_key(k: &str) -> bool {
+    let k = k.trim();
+    k.len() >= 20 && k.len() <= 200 && k.contains(':') && k.chars().all(|c| c.is_ascii_alphanumeric() || c == ':' || c == '-' || c == '_')
+}
+
 pub fn key_from_env() -> Option<String> {
     std::env::var("FAL_KEY").ok().or_else(|| std::env::var("FAL_API_KEY").ok()).filter(|k| !k.trim().is_empty())
 }
@@ -98,11 +104,32 @@ impl Fal {
         Ok(v)
     }
 
+    /// Create the workflow under `base`, or `base-2`, `base-3`… if the name is
+    /// taken (fal can't overwrite a workflow). Returns (name, fal URL if known).
+    pub async fn create_workflow_unique(&self, base: &str, make: impl Fn(&str) -> Value) -> Result<(String, Option<String>)> {
+        let mut last = None;
+        for i in 1..=20 {
+            let name = if i == 1 { base.to_string() } else { format!("{base}-{i}") };
+            match self.create_workflow(&make(&name)).await {
+                Ok(v) => {
+                    let url = v["workflow"]["user_nickname"].as_str().or(v["user_nickname"].as_str()).map(|u| format!("https://fal.ai/workflows/{u}/{name}"));
+                    return Ok((name, url));
+                }
+                Err(e) if format!("{e:#}").contains("already exists") => last = Some(e),
+                Err(e) => return Err(e),
+            }
+        }
+        Err(last.unwrap_or_else(|| anyhow!("could not find a free workflow name")))
+    }
+
     /// Cheap authenticated call to check the key works (pricing of a known endpoint).
     pub async fn check_key(&self) -> Result<()> {
         let res = self.http.get(format!("{PLATFORM}/models/pricing?endpoint_id=fal-ai/nano-banana-pro")).header("Authorization", self.auth()).send().await?;
         if res.status().as_u16() == 401 || res.status().as_u16() == 403 {
             bail!("fal rejected the key ({})", res.status());
+        }
+        if !res.status().is_success() {
+            bail!("fal key check failed ({})", res.status());
         }
         Ok(())
     }
