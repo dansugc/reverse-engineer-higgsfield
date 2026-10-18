@@ -8,6 +8,8 @@
 
 `reh analyze video.mp4` → `reh build flow.json` → `reh verify` → `reh batch`
 
+Built by [**DansUGC**](https://dansugc.com/?utm_source=github&utm_medium=oss&utm_campaign=reverse-engineer-higgsfield): real human UGC creators for your ads, from $5 a clip.
+
 </div>
 
 ---
@@ -33,15 +35,19 @@ reh batch          one rebuild per line of variants.jsonl, within a budget
 reh publish        the same flow as a native fal Workflow
 ```
 
-For example, the before/after "watch me lock in for 3 months" format comes out as:
+For example, a Higgsfield before/after "watch me lock in for 3 months" video comes out as ([full report](examples/before-after-transformation/REPORT.md), [flow.json](examples/before-after-transformation/flow.json)):
 
 | Step | fal model | Why |
 |---|---|---|
-| `character` text-to-image | `fal-ai/nano-banana-pro` | the "before" first frame, 9:16 |
-| `after` image edit | `fal-ai/nano-banana-pro/edit` | same person, transformed, so identity holds across the cut |
-| `shot1` image-to-video | `fal-ai/kling-video/v3/pro/image-to-video` | slow mirror turn-around, 7.07s |
-| `shot2` image-to-video | `fal-ai/kling-video/v3/pro/image-to-video` | the "after" turn, 5.96s |
-| edit | local ffmpeg | hard cut at 7.07s, caption "{{caption}}" 0–7.07s, your music |
+| `base_image_before` text-to-image | `fal-ai/nano-banana-pro` | the "before" first frame, 9:16, body described concretely |
+| `base_image_after` image edit | `fal-ai/nano-banana-pro/edit` | same person, written as a list of changes so the "after" really changes |
+| `shot1` image-to-video | `fal-ai/kling-video/v3/pro/image-to-video` | slow side-profile turn, 7.07s |
+| `shot2` image-to-video | `fal-ai/kling-video/v3/pro/image-to-video` | thumbs up + arms out, 5.96s |
+| edit | local ffmpeg | hard cut at 7.07s, caption "{{caption_text}}" 0–7.07s, your music |
+
+About $2.26 per run at fal's live prices. The two stills from that flow (AI-generated):
+
+<p align="center"><img src="examples/before-after-transformation/before-after.jpg" alt="AI-generated before and after stills from the reverse-engineered flow" width="480"></p>
 
 ## Quick start
 

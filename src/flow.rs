@@ -200,6 +200,12 @@ pub fn output_path(kind: Kind) -> &'static str {
     }
 }
 
+fn label_of(id: &str) -> String {
+    let s = id.replace('_', " ");
+    let mut c = s.chars();
+    c.next().map(|f| f.to_uppercase().collect::<String>() + c.as_str()).unwrap_or_default()
+}
+
 // ------------------------------------------------------------- templating ---
 
 pub fn render(template: &str, vars: &BTreeMap<String, String>) -> String {
@@ -281,51 +287,70 @@ impl Flow {
 
     /// Native fal Workflow definition: one `run` node per step, chained by
     /// `$node.path` refs, ending in an ffmpeg merge of the sequence.
+    /// fal Workflow JSON in the shape the fal editor exports: `run` nodes with
+    /// their prompts inline, chained by `$node.*` refs listed in `depends`, and
+    /// one `display` node named `output`.
     pub fn to_fal_workflow(&self, name: &str) -> Value {
         let vals = self.values(&BTreeMap::new());
         let mut nodes = Map::new();
-        let mut schema_in = Map::new();
         let kinds: BTreeMap<&str, Kind> = self.steps.iter().map(|s| (s.id.as_str(), s.kind)).collect();
         for (i, s) in self.steps.iter().enumerate() {
-            let input_key = format!("{}_prompt", s.id);
-            schema_in.insert(input_key.clone(), json!({ "type": "string", "default": render(&s.prompt, &vals), "description": s.why }));
+            // The fal editor ignores schema defaults, so a `$input.*` prompt
+            // shows up blank and fails as a missing required field. Prompts are
+            // written into the nodes (editable there), like fal's own examples.
+            let prompt = render(&s.prompt, &vals);
             let image_ref = s.image_from.as_ref().map(|src| format!("${src}.{}", output_path(kinds[src.as_str()])));
-            let input = build_input(s, &format!("$input.{input_key}"), image_ref.as_deref(), &self.format);
+            let input = build_input(s, &prompt, image_ref.as_deref(), &self.format);
+            let video = matches!(s.kind, Kind::ImageToVideo | Kind::TextToVideo);
             nodes.insert(
                 s.id.clone(),
                 json!({
                     "id": s.id, "type": "run", "app": s.model,
                     "depends": s.image_from.iter().cloned().collect::<Vec<_>>(),
                     "input": input,
-                    "metadata": { "position": { "x": 120 + 340 * i as i64, "y": if matches!(s.kind, Kind::ImageToVideo | Kind::TextToVideo) { 320 } else { 100 } } }
+                    "metadata": { "position": { "x": 520 * i as i64, "y": if video { 760 } else { 0 } } }
                 }),
             );
         }
         let clips: Vec<String> = self.edit.sequence.iter().map(|c| format!("${}.video.url", c.step)).collect();
-        let deps: Vec<String> = self.edit.sequence.iter().map(|c| c.step.clone()).collect();
         let mut output = Map::new();
+        let mut out_deps: Vec<String> = vec![];
         if clips.len() > 1 {
+            let deps: Vec<String> = self.edit.sequence.iter().map(|c| c.step.clone()).collect();
             nodes.insert(
                 "merge".into(),
-                json!({ "id": "merge", "type": "run", "app": MERGE, "depends": deps, "input": { "video_urls": clips }, "metadata": { "position": { "x": 120 + 340 * self.steps.len() as i64, "y": 320 } } }),
+                json!({ "id": "merge", "type": "run", "app": MERGE, "depends": deps, "input": { "video_urls": clips }, "metadata": { "position": { "x": 520 * self.steps.len() as i64, "y": 760 } } }),
             );
             output.insert("video".into(), json!("$merge.video.url"));
+            out_deps.push("merge".into());
         } else if let Some(c) = clips.first() {
             output.insert("video".into(), json!(c));
         }
         for c in &self.edit.sequence {
             output.insert(format!("{}_clip", c.step), json!(format!("${}.video.url", c.step)));
+            if !out_deps.contains(&c.step) {
+                out_deps.push(c.step.clone());
+            }
         }
-        let out_schema: Map<String, Value> = output.keys().map(|k| (k.clone(), json!({ "type": "string" }))).collect();
+        nodes.insert(
+            "output".into(),
+            json!({ "id": "output", "type": "display", "depends": out_deps, "fields": output, "input": {}, "metadata": { "position": { "x": 520 * (self.steps.len() + 1) as i64, "y": 300 } } }),
+        );
+        let out_schema: Map<String, Value> = output
+            .keys()
+            .map(|k| (k.clone(), json!({ "name": k, "label": if k == "video" { "Final video".to_string() } else { format!("{} clip", label_of(k.trim_end_matches("_clip"))) }, "type": "string" })))
+            .collect();
         json!({
             "name": name,
             "title": self.title,
             "is_public": false,
             "contents": {
-                "name": name, "version": "1.0.0",
+                "name": "workflow", "version": "1",
                 "nodes": nodes, "output": output,
-                "schema": { "input": schema_in, "output": out_schema },
-                "metadata": { "generated_by": "reh — reverse engineer higgsfield", "format_summary": self.format_summary, "captions_and_trims": "applied locally by `reh build` (trim each clip to the original cut, overlay captions)" }
+                "schema": { "input": {}, "output": out_schema },
+                "metadata": {
+                    "description": format!("{} — reverse-engineered by reh. Captions and trims to the original cuts are applied locally by `reh build`.", self.format_summary),
+                }
             }
         })
     }
@@ -391,9 +416,45 @@ mod tests {
         let nodes = &w["contents"]["nodes"];
         assert_eq!(nodes["shot1"]["input"]["start_image_url"], "$character.images.0.url");
         assert_eq!(nodes["after"]["input"]["image_urls"][0], "$character.images.0.url");
-        assert_eq!(nodes["shot1"]["input"]["prompt"], "$input.shot1_prompt");
+        assert_eq!(nodes["character"]["input"]["prompt"], "a woman in her 20s in a bathroom");
         assert_eq!(nodes["merge"]["input"]["video_urls"][1], "$shot2.video.url");
         assert_eq!(w["contents"]["output"]["video"], "$merge.video.url");
-        assert_eq!(w["contents"]["schema"]["input"]["character_prompt"]["default"], "a woman in her 20s in a bathroom");
+    }
+
+    /// The fal editor's rules: only run/display nodes, id == key, every `$x.`
+    /// reference listed in `depends` (`$input.` → "input"), every schema input
+    /// has a `modelId` that exists and reads it, output display depends on all.
+    #[test]
+    fn workflow_follows_fal_editor_rules() {
+        fn refs(v: &Value, out: &mut Vec<String>) {
+            match v {
+                Value::String(s) if s.starts_with('$') => out.push(s[1..].split('.').next().unwrap().to_string()),
+                Value::Array(a) => a.iter().for_each(|x| refs(x, out)),
+                Value::Object(o) => o.values().for_each(|x| refs(x, out)),
+                _ => {}
+            }
+        }
+        let w = sample().to_fal_workflow("t");
+        let c = &w["contents"];
+        let nodes = c["nodes"].as_object().unwrap();
+        assert_eq!(nodes["output"]["type"], "display");
+        for (key, n) in nodes {
+            assert_eq!(n["id"], *key);
+            assert!(matches!(n["type"].as_str(), Some("run") | Some("display")), "{key}");
+            let deps: Vec<&str> = n["depends"].as_array().unwrap().iter().map(|d| d.as_str().unwrap()).collect();
+            let mut r = vec![];
+            refs(&n["input"], &mut r);
+            refs(&n["fields"], &mut r);
+            for x in r {
+                assert!(deps.contains(&x.as_str()), "{key} references ${x} without depends");
+                assert!(x == "input" || nodes.contains_key(&x), "{key} → unknown node {x}");
+            }
+        }
+        for (k, f) in c["schema"]["input"].as_object().unwrap() {
+            assert_eq!(f["name"], *k);
+            let m = f["modelId"].as_str().unwrap();
+            assert!(nodes[m]["input"].to_string().contains(&format!("$input.{k}")), "{k} not read by {m}");
+        }
+        assert_eq!(c["output"], nodes["output"]["fields"]);
     }
 }

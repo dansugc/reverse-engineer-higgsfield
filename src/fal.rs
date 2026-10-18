@@ -159,5 +159,5 @@ pub fn text_output(out: &Value) -> String {
 }
 
 pub fn video_llm_input(model: &str, system: &str, prompt: &str, video_urls: &[String]) -> Value {
-    json!({ "model": model, "system_prompt": system, "prompt": prompt, "video_urls": video_urls, "temperature": 0.2, "max_tokens": 8000 })
+    json!({ "model": model, "system_prompt": system, "prompt": prompt, "video_urls": video_urls, "temperature": 0.2, "max_tokens": 20000, "reasoning": true })
 }

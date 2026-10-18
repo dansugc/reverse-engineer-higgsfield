@@ -1,8 +1,8 @@
 {
   "version": "1",
-  "name": "skeleton",
-  "title": "Probe-only skeleton",
-  "format_summary": "2 shot(s), 13.0s, 9:16 \u2014 fill the variables from the keyframes or re-run with FAL_KEY",
+  "name": "fitness-transformation-glowup",
+  "title": "Fitness Before/After Transformation",
+  "format_summary": "A two-shot before-and-after sequence showing a physique transformation, driven by a hard cut and a trending audio track.",
   "format": {
     "aspect": "9:16",
     "width": 720,
@@ -11,57 +11,71 @@
     "fps": 30.0
   },
   "variables": {
-    "setting": {
-      "value": "a bright room",
-      "description": "where it happens"
+    "after_state": {
+      "value": "about 15 kg lighter after 3 months of training: much narrower waist, completely flat stomach with visible ab lines and obliques, lean toned arms with defined shoulders, slimmer face and sharper jawline, upright confident posture",
+      "description": "Every visible change for the 'after' edit (written as a delta)."
     },
-    "shot1_motion": {
-      "value": "subtle natural motion, static camera",
-      "description": "subject + camera motion in shot 1"
+    "before_state": {
+      "value": "visibly out of shape and carrying roughly 15 kg of extra weight: a soft rounded lower belly that spills slightly over the waistband, soft love handles, thick soft upper arms, fuller round face and soft jawline, no muscle definition anywhere, relaxed slightly slouched posture",
+      "description": "Visible 'before' body — concrete, so the model doesn't default to a fit person."
     },
-    "shot2_motion": {
-      "value": "subtle natural motion, static camera",
-      "description": "subject + camera motion in shot 2"
+    "caption_text": {
+      "value": "watch me lock in for 3 months",
+      "description": "Hook text displayed in the first shot."
     },
-    "style": {
-      "value": "vertical iPhone UGC footage, natural light",
-      "description": "look and feel"
+    "character": {
+      "value": "East Asian woman in her mid 20s, dark hair in a messy high bun, black sports bra and loose black shorts, skin shiny with sweat",
+      "description": "Base description of the person and outfit."
     },
-    "subject": {
-      "value": "a person",
-      "description": "who/what is on screen"
+    "setting_after": {
+      "value": "bathroom with glass shower door and white subway tiles",
+      "description": "Background for the second shot."
+    },
+    "setting_before": {
+      "value": "bathroom with shower curtain and wooden shelves",
+      "description": "Background for the first shot."
     }
   },
   "steps": [
     {
-      "id": "character",
+      "id": "base_image_before",
       "kind": "text_to_image",
       "model": "fal-ai/nano-banana-pro",
-      "prompt": "{{subject}} in {{setting}}, {{style}}",
+      "prompt": "Vertical iPhone photo, side profile, full torso to mid-thigh in frame. {{character}}. Her body is {{before_state}}. She stands in {{setting_before}}. Warm dim bathroom light, slight grain, casual UGC mirror-check look, no text.",
       "image_from": null,
       "duration_s": null,
       "params": {},
-      "why": "first frame for every shot (placeholder \u2014 describe the subject from the keyframes)"
+      "why": "Best for generating realistic UGC human subjects with accurate prompt adherence."
+    },
+    {
+      "id": "base_image_after",
+      "kind": "image_edit",
+      "model": "fal-ai/nano-banana-pro/edit",
+      "prompt": "Same woman: keep her exact face, hair bun, black sports bra and black shorts, same side-profile camera framing. She is now {{after_state}}. Make the transformation dramatic and obvious at a glance — do NOT keep any of the old belly, love handles or soft arms. Move her to {{setting_after}}. Bright overhead bathroom light, vertical iPhone UGC look, no text.",
+      "image_from": "base_image_before",
+      "duration_s": null,
+      "params": {},
+      "why": "Identity-preserving edit written as an explicit delta, so the after body actually changes instead of copying the before."
     },
     {
       "id": "shot1",
       "kind": "image_to_video",
       "model": "fal-ai/kling-video/v3/pro/image-to-video",
-      "prompt": "{{shot1_motion}}",
-      "image_from": "character",
-      "duration_s": 7.067,
+      "prompt": "She slowly turns from side profile toward the camera and back, letting her soft belly and arms show. Static handheld phone camera, natural pace. Her body shape stays exactly the same the whole shot.",
+      "image_from": "base_image_before",
+      "duration_s": 7.1,
       "params": {},
-      "why": "shot 1 (0.00\u20137.07s)"
+      "why": "Kling handles slow, deliberate human rotations well without losing structural integrity."
     },
     {
       "id": "shot2",
       "kind": "image_to_video",
       "model": "fal-ai/kling-video/v3/pro/image-to-video",
-      "prompt": "{{shot2_motion}}",
-      "image_from": "character",
-      "duration_s": 5.958,
+      "prompt": "She gives two thumbs up, then turns sideways and stretches both arms straight out in front, showing her flat stomach and lean arms. Static handheld phone camera. Her lean body shape stays exactly the same the whole shot.",
+      "image_from": "base_image_after",
+      "duration_s": 6.0,
       "params": {},
-      "why": "shot 2 (7.07\u201313.03s)"
+      "why": "Strong at complex human gestures like thumbs up and arm extensions."
     }
   ],
   "edit": {
@@ -75,10 +89,18 @@
         "duration_s": 5.958
       }
     ],
-    "captions": [],
+    "captions": [
+      {
+        "text": "{{caption_text}}",
+        "start_s": 0.0,
+        "end_s": 7.067,
+        "position": "center",
+        "size": "medium"
+      }
+    ],
     "audio": {
       "mode": "music",
-      "note": "",
+      "note": "Upbeat hip-hop/rap trending audio track.",
       "music_path": null
     }
   },
@@ -89,7 +111,7 @@
       "source": "ffprobe"
     },
     {
-      "claim": "2 shot(s): 0.00\u20137.07s, 7.07\u201313.03s",
+      "claim": "2 shot(s): 0.00–7.07s, 7.07–13.03s",
       "kind": "observed",
       "source": "ffmpeg scene detection (threshold 0.3)"
     },
@@ -112,14 +134,34 @@
       "claim": "no C2PA / generator manifest found",
       "kind": "observed",
       "source": "container tags / byte scan"
+    },
+    {
+      "claim": "AI generation",
+      "kind": "inferred",
+      "source": "shot 1 / 0:04 (morphing shower curtain during turn)"
+    },
+    {
+      "claim": "Before/after format",
+      "kind": "inferred",
+      "source": "shot 2 / 7.06s (hard cut to toned physique)"
+    },
+    {
+      "claim": "Likely format: Before/after transformation (tools: Kling or Minimax for video, Midjourney/Flux for base images; confidence high)",
+      "kind": "inferred",
+      "source": "Classic 2-shot structure with identity consistency but distinct physique changes. Slight AI morphing on hands and background details."
     }
   ],
   "unknowns": [
-    "Everything visual: no video model ran (set FAL_KEY)"
+    "Exact generation prompts",
+    "Original seed values",
+    "Name of the specific audio track used",
+    "Which model Higgsfield used for each shot (inferred from visuals only)"
   ],
   "source": {
-    "file": "example.mp4",
-    "read_with": "probe only",
-    "note": "interim example"
+    "file": "higgsfield-before-after.mp4",
+    "harness_sha": "9b22a9e2c4d8",
+    "read_with": "google/gemini-3.1-pro-preview",
+    "sha256_16": "7c149e2f62a17694",
+    "tool": "reh 0.1.0"
   }
 }
